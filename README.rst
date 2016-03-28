@@ -1,3 +1,5 @@
+::
+
               __       __    __
     .--.--.--|__.-----|  |--|  |--.-----.-----.-----.
     |  |  |  |  |__ --|     |  _  |  _  |     |  -__|
@@ -11,7 +13,7 @@
     wishbone.input.httpserver
     =========================
 
-    Version: 0.1.0
+    Version: 1.0.0
 
     Receive events over HTTP.
     -------------------------
@@ -65,4 +67,3 @@
 
         For example http://localhost:10080/fubar is mapped to the <fubar> queue.
         The root resource "/" is mapped the <outbox> queue.
-
