@@ -1,25 +1,46 @@
 ::
 
+
               __       __    __
     .--.--.--|__.-----|  |--|  |--.-----.-----.-----.
     |  |  |  |  |__ --|     |  _  |  _  |     |  -__|
     |________|__|_____|__|__|_____|_____|__|__|_____|
-                                       version 2.1.2
+                                       version 2.1.5
 
     Build composable event pipeline servers with minimal effort.
+
 
 
     =========================
     wishbone.input.httpserver
     =========================
 
-    Version: 1.0.0
+    Version: 1.0.2
 
     Receive events over HTTP.
     -------------------------
 
 
-        Creates an HTTP server to which events can be submitted.
+        An HTTP server mapping URL endpoints to queues to which events can be
+        submitted.
+
+        Mapping queues to endpoints:
+        ---------------------------
+
+        Connecting queues to this module automatically maps them to the equivalent
+        URL enpoint.
+
+        The "/" endpoint is by default mapped to the <outbox> queue.
+
+        Available meta data:
+        --------------------
+
+        Each event has some meta associated stored in @tmp.<instance_name>:
+
+            - remote_addr   : The client IP
+            - request_method: The request method used
+            - queue         : The name of the endpoint (and thus queue) to
+                              which data was submitted.
 
 
         Parameters:
@@ -59,11 +80,9 @@
         Queues:
 
             - outbox
-               |  Incoming events submitted to /.
+               |  Incoming events submitted to /
+
+            - <queue_name>
+               |  Incoming events submitted to /<queue_name>
 
 
-        When more queues are connected to this module instance, they are
-        automatically mapped to the URL resource.
-
-        For example http://localhost:10080/fubar is mapped to the <fubar> queue.
-        The root resource "/" is mapped the <outbox> queue.

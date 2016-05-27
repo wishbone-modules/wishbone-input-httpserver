@@ -34,7 +34,26 @@ class HTTPInServer(Actor):
 
     '''**Receive events over HTTP.**
 
-    Creates an HTTP server to which events can be submitted.
+    An HTTP server mapping URL endpoints to queues to which events can be
+    submitted.
+
+    Mapping queues to endpoints:
+    ---------------------------
+
+    Connecting queues to this module automatically maps them to the equivalent
+    URL enpoint.
+
+    The "/" endpoint is by default mapped to the <outbox> queue.
+
+    Available meta data:
+    --------------------
+
+    Each event has some meta associated stored in @tmp.<instance_name>:
+
+        - remote_addr   : The client IP
+        - request_method: The request method used
+        - queue         : The name of the endpoint (and thus queue) to
+                          which data was submitted.
 
 
     Parameters:
@@ -74,14 +93,11 @@ class HTTPInServer(Actor):
     Queues:
 
         - outbox
-           |  Incoming events submitted to /.
+           |  Incoming events submitted to /
 
+        - <queue_name>
+           |  Incoming events submitted to /<queue_name>
 
-    When more queues are connected to this module instance, they are
-    automatically mapped to the URL resource.
-
-    For example http://localhost:10080/fubar is mapped to the <fubar> queue.
-    The root resource "/" is mapped the <outbox> queue.
     '''
 
     def __init__(self, actor_config,
@@ -119,6 +135,9 @@ class HTTPInServer(Actor):
                 for line in self.delimit(env["wsgi.input"]):
                     event = Event(line)
                     event.set(resp, '@tmp.%s.response' % (self.name))
+                    event.set(env["REMOTE_ADDR"], '@tmp.%s.remote_addr' % (self.name))
+                    event.set(env["REQUEST_METHOD"], '@tmp.%s.request_method' % (self.name))
+                    event.set(queue, '@tmp.%s.queue' % (self.name))
                     self.submit(event, self.pool.getQueue(queue))
                     counter += 1
                 start_response('200 OK', [('Content-Type', 'text/plain')])
