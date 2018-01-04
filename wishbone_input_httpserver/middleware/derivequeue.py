@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  derivequeue.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,4 +22,31 @@
 #
 #
 
-from .httpserver import HTTPServer
+import falcon
+from falcon import HTTPBadRequest, HTTPNotFound
+
+
+class DeriveQueue(object):
+    '''
+    A Falcon middleware which derives the Wishbone queue name from the request.
+    '''
+
+    def __init__(self, wishbone_queues):
+
+        self.wishbone_queues = wishbone_queues
+
+    def process_request(self, req, resp):
+
+        queue = req.path.lstrip('/')
+        if queue == "":
+            queue = "outbox"
+
+        if queue not in self.wishbone_queues(names=True):
+            raise HTTPNotFound()
+
+        if queue.startswith("_") or queue == "inbox":
+            resp.status = falcon.HTTP_400
+            resp.body = ("Bad request.")
+            raise HTTPBadRequest("invalid endpoint")
+
+        req.queue = queue

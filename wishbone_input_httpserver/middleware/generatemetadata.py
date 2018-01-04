@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  __init__.py
+#  generatemetadata.py
 #
 #  Copyright 2017 Jelle Smet <development@smetj.net>
 #
@@ -22,4 +22,20 @@
 #
 #
 
-from .httpserver import HTTPServer
+from urllib.parse import parse_qs
+
+
+class GenerateMetaData(object):
+    '''
+    A Falcon middleware which generates a Wishbone event instance containing
+    the payload and all request meta data.
+    '''
+
+    def process_request(self, req, resp):
+
+        meta = {
+            "headers": {key.lower(): value for key, value in req.headers.items()},
+            "env": {key.lower(): value for key, value in req.env.items() if isinstance(value, str)},
+            "params": {key.lower(): value[-1] for key, value in parse_qs(req.env["QUERY_STRING"]).items()}
+        }
+        req.meta = meta
