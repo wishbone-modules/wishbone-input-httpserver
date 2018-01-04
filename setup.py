@@ -27,10 +27,10 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 PROJECT = 'wishbone_input_httpserver'
-VERSION = '1.0.2'
+VERSION = '3.0.0'
 
 install_requires = [
-    'wishbone>=2.1.1',
+    'wishbone>=3.0.0',
 ]
 
 try:
@@ -85,8 +85,8 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     entry_points={
-        'wishbone.input': [
-            'httpserver=wishbone_input_httpserver:HTTPInServer',
+        'wishbone_contrib.module.input': [
+            'httpserver=wishbone_input_httpserver:HTTPServer',
         ]
     }
 )
