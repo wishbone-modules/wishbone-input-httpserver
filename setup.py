@@ -31,6 +31,7 @@ VERSION = '3.0.0'
 
 install_requires = [
     'wishbone>=3.0.0',
+    'falcon'
 ]
 
 try:
