@@ -419,7 +419,7 @@ def test_module_http_response_user_auth_load_file():
         http.pool.queue._htpasswd.disableFallThrough()
         http.pool.queue._resource.disableFallThrough()
         http.start()
-        http.pool.queue._htpasswd.put(Event({"path": "/tmp/htpasswd", "inotify_type": "IN_WRITE"}))
+        http.pool.queue._htpasswd.put(Event({"path": "/tmp/htpasswd", "inotify_type": "WISHBONE_INIT"}))
         r = requests.get('http://localhost:19283/outbox', auth=("test", "test"))
         http.stop()
         r.close()
@@ -443,7 +443,7 @@ def test_module_http_response_user_auth_order():
         http.pool.queue._htpasswd.disableFallThrough()
         http.pool.queue._resource.disableFallThrough()
         http.start()
-        http.pool.queue._htpasswd.put(Event({"path": "/tmp/htpasswd", "inotify_type": "IN_WRITE"}))
+        http.pool.queue._htpasswd.put(Event({"path": "/tmp/htpasswd", "inotify_type": "WISHBONE_INIT"}))
 
         r = requests.get('http://localhost:19283/outbox', auth=("test", "test"))
         assert r.status_code == 200
