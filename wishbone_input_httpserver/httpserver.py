@@ -3,7 +3,7 @@
 #
 #  falconserver.py
 #
-#  Copyright 2017 Jelle Smet <development@smetj.net>
+#  Copyright 2018 Jelle Smet <development@smetj.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -40,18 +40,25 @@ class HTTPServer(InputModule):
     An HTTP server mapping URL endpoints to queues to which events can be
     submitted.
 
-    Mapping queues to endpoints:
-    ---------------------------
+    Mapping queues to endpoints::
 
-    Connecting queues to this module automatically maps them to the equivalent
-    URL endpoint.
+        Connecting queues to this module automatically maps them to the equivalent
+        URL endpoint.
 
-    The "/" endpoint is by default mapped to the <outbox> queue.
+        The "/" endpoint is by default mapped to the <outbox> queue.
 
-    Available meta data:
-    --------------------
 
-    Each event has some meta associated stored in tmp.<instance_name>:
+    Authentication and authorization behavior::
+
+        - The htpasswd and resource file content override any duplicate entries
+          defined in ``resource`` and ``htpasswd``.
+        - Htpasswd is evaluated first before token validation.
+        - You cannot define htpasswd and token authentication on the same
+          resource definition.
+
+    Available meta data::
+
+        Each event has some meta associated stored in tmp.<instance_name>
 
         {
         "env": {
@@ -88,14 +95,7 @@ class HTTPServer(InputModule):
         }
         }
 
-    Misc Behavior:
-    --------------
-
-    The htpasswd and resource file will have priority over what has been
-    defined by ``htpasswd`` and ``resource`` parameter.
-
-
-    Parameters:
+    Parameters::
 
         - address(str)("0.0.0.0")
            |  The address to bind to.
@@ -128,7 +128,7 @@ class HTTPServer(InputModule):
         - htpasswd(dict)({})
             |  The htpasswd username and password data.
 
-    Queues:
+    Queues::
 
         Queue 'read_htpasswd' and 'read_tokens' are reserved queue names.
         These queues expect events containing the filename of the htpasswd or
@@ -349,6 +349,8 @@ class HTTPServer(InputModule):
         Typically the ``wishbone.module.input.inotify`` modules
         provides these.
         '''
+        # IN_CLOSE_WRITE
+        # WISHBONE_INIT
 
         self.resource_file.load(
             event.get(

@@ -3,7 +3,7 @@
 #
 #  basic_authentication.py
 #
-#  Copyright 2017 Jelle Smet <development@smetj.net>
+#  Copyright 2018 Jelle Smet <development@smetj.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -131,4 +131,3 @@ class BasicAuthentication(object):
                 )
         else:
             return True
-
