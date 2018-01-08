@@ -21,11 +21,11 @@
 #  MA 02110-1301, USA.
 #
 #
+from gevent import monkey; monkey.patch_all()
 
 from wishbone.actor import ActorConfig
 from wishbone.utils.test import getter
 from wishbone.event import Event
-from wishbone.componentmanager import ComponentManager
 
 from wishbone_input_httpserver import HTTPServer
 import requests
