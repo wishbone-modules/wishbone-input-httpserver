@@ -3,7 +3,7 @@
 #
 #  setup.py
 #
-#  Copyright 2016 Jelle Smet <development@smetj.net>
+#  Copyright 2018 Jelle Smet <development@smetj.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -27,10 +27,12 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 PROJECT = 'wishbone_input_httpserver'
-VERSION = '1.0.2'
+VERSION = '3.0.0'
 
 install_requires = [
-    'wishbone>=2.1.1',
+    'wishbone>=3.0.0',
+    'falcon',
+    'passlib'
 ]
 
 try:
@@ -85,8 +87,8 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     entry_points={
-        'wishbone.input': [
-            'httpserver=wishbone_input_httpserver:HTTPInServer',
+        'wishbone_contrib.module.input': [
+            'httpserver=wishbone_input_httpserver:HTTPServer',
         ]
     }
 )
