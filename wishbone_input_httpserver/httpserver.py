@@ -22,8 +22,7 @@
 #
 #
 
-from gevent import monkey
-monkey.patch_all()
+from gevent import monkey; monkey.patch_all()
 from wishbone.module import InputModule
 from wishbone.event import Event
 from wishbone.protocol.decode.plain import Plain
