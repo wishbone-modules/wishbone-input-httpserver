@@ -27,12 +27,13 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 PROJECT = 'wishbone_input_httpserver'
-VERSION = '3.0.0'
+VERSION = '3.0.1'
 
 install_requires = [
-    'wishbone>=3.0.0',
+    'wishbone>=3.0.2',
     'falcon',
-    'passlib'
+    'passlib',
+    'jsonschema'
 ]
 
 try:
@@ -53,6 +54,7 @@ class PyTest(TestCommand):
         import pytest
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
+
 
 setup(
     name=PROJECT,

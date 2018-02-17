@@ -153,7 +153,7 @@ def test_module_http_response_default():
     r.close()
 
     assert r.status_code == 200
-    assert r.text.startswith("OK")
+    assert r.text.startswith("200 OK")
 
 
 def test_module_https_response_default():
@@ -177,7 +177,7 @@ def test_module_https_response_default():
     r.close()
 
     assert r.status_code == 200
-    assert r.text.startswith("OK")
+    assert r.text.startswith("200 OK")
 
     unlink("/tmp/ssl.key")
     unlink("/tmp/ssl.cert")
@@ -198,7 +198,7 @@ def test_module_http_response_new_queue():
     r.close()
 
     assert r.status_code == 200
-    assert r.text.startswith("OK")
+    assert r.text.startswith("200 OK")
 
 
 def test_module_http_response_non_existing():
@@ -274,7 +274,7 @@ def test_module_http_response_user_auth_bad_header1():
     http.stop()
     r.close()
 
-    assert r.status_code == 401
+    assert r.status_code == 400
 
 
 def test_module_http_response_token_auth_ok():
@@ -312,7 +312,7 @@ def test_module_http_response_token_auth_denied():
     http.stop()
     r.close()
 
-    assert r.status_code == 401
+    assert r.status_code == 403
 
 
 def test_module_http_response_format():

@@ -22,9 +22,9 @@
 #
 #
 
-from falcon import HTTPUnauthorized
 from base64 import b64decode
 from passlib.hash import apr_md5_crypt
+import falcon
 
 
 class BasicAuthentication(object):
@@ -38,21 +38,23 @@ class BasicAuthentication(object):
 
     def process_request(self, req, resp):
 
-        auth = req.get_header('Authorization')
-        if auth is not None:
-            payload = self.extractPrefixPayload(auth)
-            if payload is None:
-                return
-            else:
-                username, password = self.extractUsernamePasswordHash(payload)
-                if not self.validatePassword(password, self.getHash(username)):
-                    raise HTTPUnauthorized(
-                        title="401 Unauthorized",
-                        description="Password incorrect."
-                    )
+        if resp.status != "200 OK":
+            return
+
+        try:
+            auth = req.get_header('Authorization')
+            if auth is not None:
+                payload = self.extractPrefixPayload(auth)
+                if payload is None:
+                    return
                 else:
+                    username, password = self.extractUsernamePasswordHash(payload)
+                    self.validatePassword(password, self.getHash(username))
                     req.auth_type = "basic"
                     req.auth_user = username
+        except Exception as err:
+            resp.status = falcon.HTTP_401
+            resp.body = "401 Unauthorized. %s" % (err)
 
     def extractPrefixPayload(self, data):
         '''
@@ -72,19 +74,13 @@ class BasicAuthentication(object):
         result = data.split()
 
         if len(result) != 2:
-            raise HTTPUnauthorized(
-                title="401 Unauthorized",
-                description="Authorize header value does not have the right format."
-            )
+            raise Exception("Authorize header value does not have the right format.")
 
         if result[0].lower() == "basic":
             try:
                 payload = b64decode(result[1]).decode('utf-8')
             except Exception:
-                raise HTTPUnauthorized(
-                    title="401 Unauthorized",
-                    description="Could not properly decode authentication value."
-                )
+                raise Exception("Could not properly decode authentication value.")
             else:
                 return payload
         else:
@@ -96,10 +92,7 @@ class BasicAuthentication(object):
             username, password = data.split(':')
             return username, password
         except Exception as err:
-            raise HTTPUnauthorized(
-                title='401 Unauthorized',
-                description='Invalid Authorization: Username password payload does not have expected format.',
-            )
+            raise Exception("Invalid Authorization: Username password payload does not have expected format.")
 
     def validatePassword(self, password, hash_value):
         '''
@@ -113,21 +106,15 @@ class BasicAuthentication(object):
             bool: True when ``password`` and ``hash_value`` match
 
         Raise:
-            HTTPUnauthorized: For every error occurring
+            Exception: For every error occurring
         '''
 
         try:
             authenticated = apr_md5_crypt.verify(password, hash_value)
         except Exception as err:
-            raise HTTPUnauthorized(
-                title="401 Unauthorized",
-                description="Password incorrect."
-            )
+            raise Exception("Password incorrect.")
 
         if not authenticated:
-                raise HTTPUnauthorized(
-                    title="401 Unauthorized",
-                    description="Password incorrect."
-                )
+            raise Exception("Password incorrect.")
         else:
             return True

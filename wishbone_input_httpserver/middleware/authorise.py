@@ -22,7 +22,7 @@
 #
 #
 
-from falcon import HTTPUnauthorized
+import falcon
 
 
 class Authorize(object):
@@ -38,22 +38,19 @@ class Authorize(object):
 
     def process_request(self, req, resp):
 
+        if resp.status != "200 OK":
+            return
+
         if self.requires_authentication(req.queue):
             if hasattr(req, "auth_type"):
                 if req.auth_type == "basic":
                     if not self.authorize_user(req.auth_user, req.queue):
-                        raise HTTPUnauthorized(
-                            title="401 Unauthorized",
-                            description="User not authorized for resource."
-                        )
+                        resp.status = falcon.HTTP_403
+                        resp.body = "403 Forbidden. User not authorized for resource."
                 elif req.auth_type == "token":
                     if not self.authorize_token(req.auth_token, req.queue):
-                        raise HTTPUnauthorized(
-                            title="401 Unauthorized",
-                            description="Token incorrect."
-                        )
+                        resp.status = falcon.HTTP_403
+                        resp.body = "403 Forbidden. Token is incorrect."
             else:
-                raise HTTPUnauthorized(
-                    title="401 Unauthorized",
-                    description="Failed to authenticate."
-                )
+                resp.status = falcon.HTTP_400
+                resp.body = "400 Bad Request. Unsupported authentication method."

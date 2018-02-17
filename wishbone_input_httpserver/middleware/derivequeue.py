@@ -23,7 +23,6 @@
 #
 
 import falcon
-from falcon import HTTPBadRequest, HTTPNotFound
 
 
 class DeriveQueue(object):
@@ -37,16 +36,23 @@ class DeriveQueue(object):
 
     def process_request(self, req, resp):
 
+        if resp.status != "200 OK":
+            return
+
         queue = req.path.lstrip('/')
         if queue == "":
             queue = "outbox"
 
-        if queue not in self.wishbone_queues(names=True):
-            raise HTTPNotFound()
-
-        if queue.startswith("_") or queue == "inbox":
+        if queue == "inbox":
             resp.status = falcon.HTTP_400
-            resp.body = ("Bad request.")
-            raise HTTPBadRequest("invalid endpoint")
+            resp.body = "400 Bad Request. You cannot submit to reserved endpoint 'inbox'."
+
+        elif queue.startswith("_"):
+            resp.status = falcon.HTTP_400
+            resp.body = "400 Bad Request. Endpoints cannot be prefixed with underscore."
+
+        elif queue not in self.wishbone_queues(names=True):
+            resp.status = falcon.HTTP_404
+            resp.body = "404 Not Found. Endpoint '%s' does not exist." % (queue)
 
         req.queue = queue
