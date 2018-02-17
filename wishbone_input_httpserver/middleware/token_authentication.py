@@ -22,8 +22,6 @@
 #
 #
 
-from falcon import HTTPUnauthorized
-
 
 class TokenAuthentication(object):
     '''
@@ -32,15 +30,18 @@ class TokenAuthentication(object):
 
     def process_request(self, req, resp):
 
-        auth = req.get_header('Authorization')
+        if resp.status != "200 OK":
+            return
 
-        if auth is not None:
-            auth_type, token = self.extractTokenAndType(auth)
-            if auth_type == "token":
-                req.auth_type = "token"
-                req.auth_token = token
+        auth_method, payload = self.extractAuthMethodPayload(
+            req.get_header('Authorization')
+        )
 
-    def extractTokenAndType(self, data):
+        if auth_method is not None:
+            req.auth_type = auth_method
+            req.auth_token = payload
+
+    def extractAuthMethodPayload(self, data):
         '''
         Extracts the token from the Authorize header
 
@@ -54,12 +55,11 @@ class TokenAuthentication(object):
             HTTPUnauthorized: For every error occurring
         '''
 
-        result = data.split()
-
-        if len(result) != 2:
-            raise HTTPUnauthorized(
-                title="401 Unauthorized",
-                description="Auth value does not have the right format."
-            )
-
-        return result[0].lower(), result[1]
+        if data is not None:
+            result = data.split()
+            if result[0].lower() == "token":
+                return "token", result[1]
+            else:
+                return None, None
+        else:
+            return None, None

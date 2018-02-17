@@ -31,7 +31,7 @@ from wishbone_input_httpserver.middleware import BasicAuthentication
 from wishbone_input_httpserver.middleware import TokenAuthentication
 from wishbone_input_httpserver.middleware import Authorize
 from wishbone_input_httpserver.middleware import DeriveQueue
-from wishbone.error import QueueMissing, ProtocolError
+from wishbone.error import ProtocolError
 
 
 class LogWrapper(object):
@@ -54,25 +54,20 @@ class EventHandler(object):
 
     def on_get(self, req, resp, queue="outbox"):
 
-        try:
+        if resp.status == "200 OK":
             response = self.wishbone_event_callback("", req.meta, req.queue)
-        except QueueMissing as err:
-            resp.status = falcon.HTTP_404
-            resp.body = str(err)
-        else:
             resp.body = response
 
     def on_put(self, req, resp, queue="outbox"):
 
-        try:
-            for chunk in self.decoder(req.stream):
-                resp.body = self.wishbone_event_callback(chunk, req.meta, req.queue)
-        except QueueMissing as err:
-            resp.status = falcon.HTTP_404
-            resp.body = str(err)
-        except ProtocolError as err:
-            resp.status = falcon.HTTP_406
-            resp.body = "There was an error processing your request. Reason: %s" % str(err)
+        if resp.status == "200 OK":
+            try:
+                for chunk in [req.stream, None]:
+                    for item in self.decoder(chunk):
+                        resp.body = self.wishbone_event_callback(item, req.meta, req.queue)
+            except ProtocolError as err:
+                resp.status = falcon.HTTP_406
+                resp.body = "406 Not Acceptable. There was an error processing your request. Reason: ProtocolDecodeError %s" % str(err)
 
     on_post = on_put
 
@@ -121,7 +116,6 @@ class FalconServer(object):
         )
 
         self.app.add_route('/{queue}', event_handler)
-        # self.app.add_sink(self.handle_404, '')
 
         if self.ssl_key is not None and self.ssl_cert is not None:
             ssl_options = {
@@ -143,12 +137,6 @@ class FalconServer(object):
 
     def start(self):
         self.server.start()
-
-    def handle_404(self, req, resp):
-        resp.status = falcon.HTTP_404
-        message = "Queue '%s' does not exist. Event dropped." % (req.path)
-        resp.body = message
-        self.logger.error(message)
 
     def stop(self):
         self.server.stop()

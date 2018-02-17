@@ -22,8 +22,7 @@
 #
 #
 
-from gevent import monkey
-monkey.patch_all()
+from gevent import monkey; monkey.patch_all()
 from wishbone.module import InputModule
 from wishbone.event import Event
 from wishbone.protocol.decode.plain import Plain
@@ -31,6 +30,7 @@ from .app import FalconServer
 import re
 from wishbone.utils import StructuredDataFile
 from itertools import chain
+from jsonschema import validate
 
 
 class HTTPServer(InputModule):
@@ -132,7 +132,7 @@ class HTTPServer(InputModule):
             |  See https://lwn.net/Articles/542629/
             |  Required when running multiple Wishbone instances.
 
-        - resource(dict)({".*": {"users:": [], "tokens": [], "response": "OK {{uuid}}"}})
+        - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}"}})
             |  Contains all endpoint authorization related config.
             |  The moment at least 1 user or token is defined the
             |  queue/endpoint needs authentication.
@@ -187,7 +187,7 @@ class HTTPServer(InputModule):
     def __init__(self, actor_config,
                  address="0.0.0.0", port=19283, poolsize=1000, so_reuseport=False,
                  ssl_key=None, ssl_cert=None, ssl_cacerts=None,
-                 resource={".*": {"users": [], "tokens": [], "response": "OK {{uuid}}"}}, htpasswd={}):
+                 resource={".*": {"users": [], "tokens": [], "response": "200 OK. {{uuid}}"}}, htpasswd={}):
         InputModule.__init__(self, actor_config)
 
         self.pool.createSystemQueue("_htpasswd")
@@ -196,12 +196,20 @@ class HTTPServer(InputModule):
         self.pool.createSystemQueue("_resource")
         self.registerConsumer(self.readResourceFile, "_resource")
 
-        self.decode = Plain().handler
+        self.decode = Plain(strip_newline=True).handler
 
         self.htpasswd_file = StructuredDataFile(default={}, expect_json=False, expect_yaml=False)
         self.resource_file = StructuredDataFile(schema=self.RESOURCE_SCHEMA, default={}, expect_json=False, expect_kv=False)
 
+        try:
+            validate(self.kwargs.resource, self.RESOURCE_SCHEMA)
+        except Exception as err:
+            error = str(err)
+            error = error.splitlines()[0]
+            raise Exception("The resource parameter contains an invalid payload.  Reason: %s" % (error))
+
     def preHook(self):
+
         self.server = FalconServer(
             address=self.kwargs.address,
             port=self.kwargs.port,
@@ -221,6 +229,7 @@ class HTTPServer(InputModule):
         )
 
         self.server.start()
+        self.logging.info("Webserver bound to %s:%s. Listening for incoming requests" % (self.kwargs.address, self.kwargs.port))
 
     def authorizeToken(self, token, endpoint):
         '''
@@ -292,7 +301,7 @@ class HTTPServer(InputModule):
 
         for key, value in event.kwargs.resource.items():
             if re.match(key, queue):
-                return value["response"]
+                    return value["response"]
 
     def requiresAuthentication(self, endpoint):
         '''

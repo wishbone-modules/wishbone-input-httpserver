@@ -4,7 +4,7 @@
     .--.--.--|__.-----|  |--|  |--.-----.-----.-----.
     |  |  |  |  |__ --|     |  _  |  _  |     |  -__|
     |________|__|_____|__|__|_____|_____|__|__|_____|
-                                       version 3.0.0
+                                       version 3.0.2
 
 
     ========================================
@@ -113,7 +113,7 @@
                 |  See https://lwn.net/Articles/542629/
                 |  Required when running multiple Wishbone instances.
 
-            - resource(dict)({".*": {"users:": [], "tokens": [], "response": "OK {{uuid}}"}})
+            - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}"}})
                 |  Contains all endpoint authorization related config.
                 |  The moment at least 1 user or token is defined the
                 |  queue/endpoint needs authentication.
