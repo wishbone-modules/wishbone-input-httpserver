@@ -33,6 +33,9 @@ class GenerateMetaData(object):
 
     def process_request(self, req, resp):
 
+        if resp.status != "200 OK":
+            return
+
         meta = {
             "headers": {key.lower(): value for key, value in req.headers.items()},
             "env": {key.lower(): value for key, value in req.env.items() if isinstance(value, str)},
