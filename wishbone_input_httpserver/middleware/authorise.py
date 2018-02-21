@@ -51,6 +51,10 @@ class Authorize(object):
                     if not self.authorize_token(req.auth_token, req.queue):
                         resp.status = falcon.HTTP_403
                         resp.body = "403 Forbidden. Token is incorrect."
-            else:
+            elif req.get_header('Authorization'):
                 resp.status = falcon.HTTP_400
                 resp.body = "400 Bad Request. Unsupported authentication method."
+            else:
+                resp.status = falcon.HTTP_403
+                resp.body = "403 Unauthorized. The requested resource requires authentication."
+
