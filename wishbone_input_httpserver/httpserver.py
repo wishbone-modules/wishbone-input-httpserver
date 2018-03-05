@@ -112,33 +112,39 @@ class HTTPServer(InputModule):
         - address(str)("0.0.0.0")
            |  The address to bind to.
 
-        - port(int)(19283)
-           |  The port to bind to.
+        - destination(str)("data")
+           |  The event field to store incoming data.
 
-        - ssl_key(str)(None)
-           |  When SSL is required, the location of the ssl_key to use.
+        - htpasswd(dict)({})
+            |  The htpasswd username and password data.
 
-        - ssl_cert(str)(None)
-           |  When SSL is required, the location of the ssl_cert to use.
-
-        - ssl_cacerts(str)(None)
-            |  When SSL is required, the location of the ca certs to use.
+        - native_event(bool)(False)
+           |  Whether to expect Wishbone native events or not.
 
         - poolsize(int)(1000)
             |  The connection pool size.
 
-        - so_reuseport(bool)(False)
-            |  Enables socket option SO_REUSEPORT.
-            |  See https://lwn.net/Articles/542629/
-            |  Required when running multiple Wishbone instances.
+        - port(int)(19283)
+           |  The port to bind to.
 
         - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}"}})
             |  Contains all endpoint authorization related config.
             |  The moment at least 1 user or token is defined the
             |  queue/endpoint needs authentication.
 
-        - htpasswd(dict)({})
-            |  The htpasswd username and password data.
+        - so_reuseport(bool)(False)
+            |  Enables socket option SO_REUSEPORT.
+            |  See https://lwn.net/Articles/542629/
+            |  Required when running multiple Wishbone instances.
+
+        - ssl_cacerts(str)(None)
+            |  When SSL is required, the location of the ca certs to use.
+
+        - ssl_cert(str)(None)
+           |  When SSL is required, the location of the ssl_cert to use.
+
+        - ssl_key(str)(None)
+           |  When SSL is required, the location of the ssl_key to use.
 
 
     Queues::
@@ -184,7 +190,7 @@ class HTTPServer(InputModule):
         }
     }
 
-    def __init__(self, actor_config,
+    def __init__(self, actor_config, native_event=False, destination="data",
                  address="0.0.0.0", port=19283, poolsize=1000, so_reuseport=False,
                  ssl_key=None, ssl_cert=None, ssl_cacerts=None,
                  resource={".*": {"users": [], "tokens": [], "response": "200 OK. {{uuid}}"}}, htpasswd={}):
@@ -218,14 +224,14 @@ class HTTPServer(InputModule):
             ssl_cacerts=self.kwargs.ssl_cacerts,
             poolsize=self.kwargs.poolsize,
             so_reuseport=self.kwargs.so_reuseport,
-            wishbone_event_callback=self.processEvent,
             wishbone_logger=self.logging,
             wishbone_decoder=self.decode,
             wishbone_queues=self.pool.listQueues,
             callback_authorize_user=self.authorizeUser,
             callback_authorize_token=self.authorizeToken,
             callback_get_password_hash=self.getPasswordHash,
-            callback_requires_authentication=self.requiresAuthentication
+            callback_requires_authentication=self.requiresAuthentication,
+            callback_wishbone_event=self.processEvent,
         )
 
         self.server.start()
@@ -332,7 +338,10 @@ class HTTPServer(InputModule):
         single http request.
         '''
 
-        e = Event(data)
+        e = self.generateEvent(
+            data,
+            self.kwargs.destination
+        )
         e.set(meta, 'tmp.%s' % (self.name))
         e.renderKwargs(self.kwargs_template)
         self.submit(e, queue)
