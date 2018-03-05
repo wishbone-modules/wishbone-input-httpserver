@@ -1,17 +1,15 @@
 ::
-
               __       __    __
     .--.--.--|__.-----|  |--|  |--.-----.-----.-----.
     |  |  |  |  |__ --|     |  _  |  _  |     |  -__|
     |________|__|_____|__|__|_____|_____|__|__|_____|
-                                       version 3.0.2
 
 
     ========================================
     wishbone_contrib.module.input.httpserver
     ========================================
 
-    Version: 3.0.3
+    Version: 3.0.4
 
     Receive events over HTTP.
     -------------------------
@@ -93,33 +91,39 @@
             - address(str)("0.0.0.0")
                |  The address to bind to.
 
-            - port(int)(19283)
-               |  The port to bind to.
+            - destination(str)("data")
+               |  The event field to store incoming data.
 
-            - ssl_key(str)(None)
-               |  When SSL is required, the location of the ssl_key to use.
+            - htpasswd(dict)({})
+                |  The htpasswd username and password data.
 
-            - ssl_cert(str)(None)
-               |  When SSL is required, the location of the ssl_cert to use.
-
-            - ssl_cacerts(str)(None)
-                |  When SSL is required, the location of the ca certs to use.
+            - native_event(bool)(False)
+               |  Whether to expect Wishbone native events or not.
 
             - poolsize(int)(1000)
                 |  The connection pool size.
 
-            - so_reuseport(bool)(False)
-                |  Enables socket option SO_REUSEPORT.
-                |  See https://lwn.net/Articles/542629/
-                |  Required when running multiple Wishbone instances.
+            - port(int)(19283)
+               |  The port to bind to.
 
             - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}"}})
                 |  Contains all endpoint authorization related config.
                 |  The moment at least 1 user or token is defined the
                 |  queue/endpoint needs authentication.
 
-            - htpasswd(dict)({})
-                |  The htpasswd username and password data.
+            - so_reuseport(bool)(False)
+                |  Enables socket option SO_REUSEPORT.
+                |  See https://lwn.net/Articles/542629/
+                |  Required when running multiple Wishbone instances.
+
+            - ssl_cacerts(str)(None)
+                |  When SSL is required, the location of the ca certs to use.
+
+            - ssl_cert(str)(None)
+               |  When SSL is required, the location of the ssl_cert to use.
+
+            - ssl_key(str)(None)
+               |  When SSL is required, the location of the ssl_key to use.
 
 
         Queues::
