@@ -31,7 +31,7 @@ from wishbone_input_httpserver.middleware import BasicAuthentication
 from wishbone_input_httpserver.middleware import TokenAuthentication
 from wishbone_input_httpserver.middleware import Authorize
 from wishbone_input_httpserver.middleware import DeriveQueue
-from wishbone.error import ProtocolError
+from wishbone.error import ProtocolError, InvalidData
 
 
 class LogWrapper(object):
@@ -55,8 +55,12 @@ class EventHandler(object):
     def on_get(self, req, resp, queue="outbox"):
 
         if resp.status == "200 OK":
-            response = self.wishbone_event_callback("", req.meta, req.queue)
-            resp.body = response
+            try:
+                response = self.wishbone_event_callback("", req.meta, req.queue)
+                resp.body = response
+            except InvalidData as err:
+                resp.status = falcon.HTTP_400
+                resp.body = "400 Bad Request. Unsupported event format. Reason: %s" % (err)
 
     def on_put(self, req, resp, queue="outbox"):
 
@@ -68,6 +72,9 @@ class EventHandler(object):
             except ProtocolError as err:
                 resp.status = falcon.HTTP_406
                 resp.body = "406 Not Acceptable. There was an error processing your request. Reason: ProtocolDecodeError %s" % str(err)
+            except InvalidData as err:
+                resp.status = falcon.HTTP_400
+                resp.body = "400 Bad Request. Unsupported event format. Reason: %s" % (err)
 
     on_post = on_put
 
@@ -75,7 +82,7 @@ class EventHandler(object):
 class FalconServer(object):
 
     def __init__(self, address, port, ssl_key, ssl_cert, ssl_cacerts, poolsize, so_reuseport,
-                 wishbone_event_callback, wishbone_logger, wishbone_decoder, wishbone_queues,
+                 callback_wishbone_event, wishbone_logger, wishbone_decoder, wishbone_queues,
                  callback_authorize_user, callback_authorize_token, callback_get_password_hash, callback_requires_authentication):
 
         self.address = address
@@ -85,7 +92,7 @@ class FalconServer(object):
         self.ssl_cacerts = ssl_cacerts
         self.poolsize = poolsize
         self.so_reuseport = so_reuseport
-        self.wishbone_event_callback = wishbone_event_callback
+        self.callback_wishbone_event = callback_wishbone_event
         self.logger = wishbone_logger
         self.wishbone_decoder = wishbone_decoder
         self.wishbone_queues = wishbone_queues
@@ -112,7 +119,7 @@ class FalconServer(object):
 
         event_handler = EventHandler(
             wishbone_decoder,
-            wishbone_event_callback
+            callback_wishbone_event
         )
 
         self.app.add_route('/{queue}', event_handler)

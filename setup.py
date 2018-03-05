@@ -30,7 +30,7 @@ PROJECT = 'wishbone_input_httpserver'
 VERSION = '3.0.3'
 
 install_requires = [
-    'wishbone>=3.0.2',
+    'wishbone>=3.0.3',
     'falcon',
     'passlib',
     'jsonschema'

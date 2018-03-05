@@ -156,6 +156,38 @@ def test_module_http_response_default():
     assert r.text.startswith("200 OK")
 
 
+def test_module_http_native_event():
+
+    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
+    http = HTTPServer(actor_config, native_event=True)
+
+    http.pool.createQueue("outbox")
+    http.pool.queue.outbox.disableFallThrough()
+    http.start()
+
+    r = requests.post('http://localhost:19283', data=Event().dump())
+    r.close()
+
+    http.stop()
+    assert r.status_code == 400
+
+
+def test_module_http_native_event_bad():
+
+    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
+    http = HTTPServer(actor_config, native_event=True)
+
+    http.pool.createQueue("outbox")
+    http.pool.queue.outbox.disableFallThrough()
+    http.start()
+
+    r = requests.post('http://localhost:19283', data="hello")
+    r.close()
+
+    http.stop()
+    assert r.status_code == 400
+
+
 def test_module_https_response_default():
 
     requests.packages.urllib3.disable_warnings()
