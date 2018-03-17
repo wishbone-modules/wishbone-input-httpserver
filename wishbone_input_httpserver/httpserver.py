@@ -24,7 +24,6 @@
 
 from gevent import monkey; monkey.patch_all()
 from wishbone.module import InputModule
-from wishbone.event import Event
 from wishbone.protocol.decode.plain import Plain
 from .app import FalconServer
 import re
@@ -118,7 +117,7 @@ class HTTPServer(InputModule):
         - htpasswd(dict)({})
             |  The htpasswd username and password data.
 
-        - native_event(bool)(False)
+        - native_events(bool)(False)
            |  Whether to expect Wishbone native events or not.
 
         - poolsize(int)(1000)
@@ -190,7 +189,7 @@ class HTTPServer(InputModule):
         }
     }
 
-    def __init__(self, actor_config, native_event=False, destination="data",
+    def __init__(self, actor_config, native_events=False, destination="data",
                  address="0.0.0.0", port=19283, poolsize=1000, so_reuseport=False,
                  ssl_key=None, ssl_cert=None, ssl_cacerts=None,
                  resource={".*": {"users": [], "tokens": [], "response": "200 OK. {{uuid}}"}}, htpasswd={}):

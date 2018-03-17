@@ -156,10 +156,10 @@ def test_module_http_response_default():
     assert r.text.startswith("200 OK")
 
 
-def test_module_http_native_event():
+def test_module_http_native_events():
 
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
-    http = HTTPServer(actor_config, native_event=True)
+    http = HTTPServer(actor_config, native_events=True)
 
     http.pool.createQueue("outbox")
     http.pool.queue.outbox.disableFallThrough()
@@ -172,10 +172,10 @@ def test_module_http_native_event():
     assert r.status_code == 400
 
 
-def test_module_http_native_event_bad():
+def test_module_http_native_events_bad():
 
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
-    http = HTTPServer(actor_config, native_event=True)
+    http = HTTPServer(actor_config, native_events=True)
 
     http.pool.createQueue("outbox")
     http.pool.queue.outbox.disableFallThrough()
