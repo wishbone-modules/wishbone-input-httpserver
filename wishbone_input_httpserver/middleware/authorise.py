@@ -57,4 +57,3 @@ class Authorize(object):
             else:
                 resp.status = falcon.HTTP_403
                 resp.body = "403 Unauthorized. The requested resource requires authentication."
-

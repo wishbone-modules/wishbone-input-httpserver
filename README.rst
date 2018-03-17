@@ -1,5 +1,4 @@
 ::
-
               __       __    __
     .--.--.--|__.-----|  |--|  |--.-----.-----.-----.
     |  |  |  |  |__ --|     |  _  |  _  |     |  -__|
@@ -10,7 +9,7 @@
     wishbone_contrib.module.input.httpserver
     ========================================
 
-    Version: 3.0.4
+    Version: 3.0.5
 
     Receive events over HTTP.
     -------------------------
@@ -98,7 +97,7 @@
             - htpasswd(dict)({})
                 |  The htpasswd username and password data.
 
-            - native_event(bool)(False)
+            - native_events(bool)(False)
                |  Whether to expect Wishbone native events or not.
 
             - poolsize(int)(1000)
