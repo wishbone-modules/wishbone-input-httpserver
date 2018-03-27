@@ -9,7 +9,7 @@
     wishbone_contrib.module.input.httpserver
     ========================================
 
-    Version: 3.0.5
+    Version: 3.0.6
 
     Receive events over HTTP.
     -------------------------
