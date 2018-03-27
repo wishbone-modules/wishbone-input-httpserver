@@ -24,7 +24,6 @@
 
 from gevent import monkey; monkey.patch_all()
 from wishbone.module import InputModule
-from wishbone.protocol.decode.plain import Plain
 from .app import FalconServer
 import re
 from wishbone.utils import StructuredDataFile
@@ -201,8 +200,6 @@ class HTTPServer(InputModule):
         self.pool.createSystemQueue("_resource")
         self.registerConsumer(self.readResourceFile, "_resource")
 
-        self.decode = Plain(strip_newline=True).handler
-
         self.htpasswd_file = StructuredDataFile(default={}, expect_json=False, expect_yaml=False)
         self.resource_file = StructuredDataFile(schema=self.RESOURCE_SCHEMA, default={}, expect_json=False, expect_kv=False)
 
@@ -215,6 +212,8 @@ class HTTPServer(InputModule):
 
     def preHook(self):
 
+        self.setDecoder('wishbone.protocol.decode.plain', strip_newline=True)
+
         self.server = FalconServer(
             address=self.kwargs.address,
             port=self.kwargs.port,
@@ -224,7 +223,7 @@ class HTTPServer(InputModule):
             poolsize=self.kwargs.poolsize,
             so_reuseport=self.kwargs.so_reuseport,
             wishbone_logger=self.logging,
-            wishbone_decoder=self.decode,
+            wishbone_get_decoder=self.getDecoder,
             wishbone_queues=self.pool.listQueues,
             callback_authorize_user=self.authorizeUser,
             callback_authorize_token=self.authorizeToken,
