@@ -47,9 +47,9 @@ class LogWrapper(object):
 
 class EventHandler(object):
 
-    def __init__(self, decoder, wishbone_event_callback):
+    def __init__(self, get_decoder, wishbone_event_callback):
 
-        self.decoder = decoder
+        self.getDecoder = get_decoder
         self.wishbone_event_callback = wishbone_event_callback
 
     def on_get(self, req, resp, queue="outbox"):
@@ -63,11 +63,11 @@ class EventHandler(object):
                 resp.body = "400 Bad Request. Unsupported event format. Reason: %s" % (err)
 
     def on_put(self, req, resp, queue="outbox"):
-
+        decoder = self.getDecoder()
         if resp.status == "200 OK":
             try:
                 for chunk in [req.stream, None]:
-                    for item in self.decoder(chunk):
+                    for item in decoder(chunk):
                         resp.body = self.wishbone_event_callback(item, req.meta, req.queue)
             except ProtocolError as err:
                 resp.status = falcon.HTTP_406
@@ -82,7 +82,7 @@ class EventHandler(object):
 class FalconServer(object):
 
     def __init__(self, address, port, ssl_key, ssl_cert, ssl_cacerts, poolsize, so_reuseport,
-                 callback_wishbone_event, wishbone_logger, wishbone_decoder, wishbone_queues,
+                 callback_wishbone_event, wishbone_logger, wishbone_get_decoder, wishbone_queues,
                  callback_authorize_user, callback_authorize_token, callback_get_password_hash, callback_requires_authentication):
 
         self.address = address
@@ -94,7 +94,7 @@ class FalconServer(object):
         self.so_reuseport = so_reuseport
         self.callback_wishbone_event = callback_wishbone_event
         self.logger = wishbone_logger
-        self.wishbone_decoder = wishbone_decoder
+        self.wishbone_get_decoder = wishbone_get_decoder
         self.wishbone_queues = wishbone_queues
 
         self.app = falcon.API(
@@ -118,7 +118,7 @@ class FalconServer(object):
         )
 
         event_handler = EventHandler(
-            wishbone_decoder,
+            wishbone_get_decoder,
             callback_wishbone_event
         )
 
