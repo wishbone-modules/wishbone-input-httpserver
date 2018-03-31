@@ -545,3 +545,22 @@ def test_module_http_default_submit_urlencoded():
 
     assert getter(http.pool.queue.outbox).get() == "hello there"
     http.stop()
+
+
+def test_module_http_default_submit_urlencoded_max_bytes():
+
+    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
+    http = HTTPServer(
+        actor_config,
+        resource={".*": {"users": [], "tokens": [], "response": "hello", "urldecoded_field": "payload"}},
+        max_bytes=5
+    )
+
+    http.pool.createQueue("outbox")
+    http.pool.queue.outbox.disableFallThrough()
+    http.start()
+
+    r = requests.post('http://localhost:19283', data={"payload": "hello there"})
+    r.close()
+
+    assert r.status_code == 406
