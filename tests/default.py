@@ -158,18 +158,23 @@ def test_module_http_response_default():
 
 def test_module_http_native_events():
 
-    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
+    from wishbone.componentmanager import ComponentManager
+
+    decoder = ComponentManager().getComponentByName("wishbone.protocol.decode.json")()
+
+    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True, protocol=lambda: decoder.handler)
+
     http = HTTPServer(actor_config, native_events=True)
 
     http.pool.createQueue("outbox")
     http.pool.queue.outbox.disableFallThrough()
     http.start()
 
-    r = requests.post('http://localhost:19283', data=Event().dump())
+    r = requests.post('http://localhost:19283', json=Event().dump())
     r.close()
 
     http.stop()
-    assert r.status_code == 400
+    assert r.status_code == 200
 
 
 def test_module_http_native_events_bad():
@@ -254,7 +259,7 @@ def test_module_http_response_user_auth_ok():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}"}},
+        resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}", "urldecoded_field": None}},
         htpasswd={"test": "$apr1$rUKXjcuX$hqdIeoE2Q1Z/GMFhYsNO91"}
     )
 
@@ -274,7 +279,7 @@ def test_module_http_response_user_auth_denied():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}"}},
+        resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}", "urldecoded_field": None}},
         htpasswd={"test": "$apr1$rUKXjcuX$hqdIeoE2Q1Z/GMFhYsNO91"}
     )
 
@@ -294,7 +299,7 @@ def test_module_http_response_user_auth_bad_header1():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}"}},
+        resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}", "urldecoded_field": None}},
         htpasswd={"test": "$apr1$rUKXjcuX$hqdIeoE2Q1Z/GMFhYsNO91"}
     )
 
@@ -314,7 +319,7 @@ def test_module_http_response_token_auth_ok():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": [], "tokens": ["abc"], "response": "OK {{uuid}}"}}
+        resource={".*": {"users": [], "tokens": ["abc"], "response": "OK {{uuid}}", "urldecoded_field": None}}
     )
 
     http.pool.createQueue("outbox")
@@ -333,7 +338,7 @@ def test_module_http_response_token_auth_denied():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": [], "tokens": ["abc"], "response": "OK {{uuid}}"}}
+        resource={".*": {"users": [], "tokens": ["abc"], "response": "OK {{uuid}}", "urldecoded_field": None}}
     )
 
     http.pool.createQueue("outbox")
@@ -352,7 +357,7 @@ def test_module_http_response_format():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": [], "tokens": [], "response": "12345"}},
+        resource={".*": {"users": [], "tokens": [], "response": "12345", "urldecoded_field": None}},
         htpasswd={}
     )
 
@@ -373,7 +378,7 @@ def test_module_http_response_format_extra_params():
     actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
     http = HTTPServer(
         actor_config,
-        resource={".*": {"users": [], "tokens": [], "response": "12345 {{tmp.http.params.one}}"}},
+        resource={".*": {"users": [], "tokens": [], "response": "12345 {{tmp.http.params.one}}", "urldecoded_field": None}},
         htpasswd={}
     )
 
@@ -395,7 +400,7 @@ def test_module_http_invalid_resource():
     try:
         HTTPServer(
             actor_config,
-            resource={".*": {"xusers": [], "tokens": [], "response": "12345 {{tmp.http.params.one}}"}},
+            resource={".*": {"xusers": [], "tokens": [], "response": "12345 {{tmp.http.params.one}}", "urldecoded_field": None}},
             htpasswd={}
         )
     except Exception:
@@ -443,7 +448,7 @@ def test_module_http_response_user_auth_load_file():
         actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
         http = HTTPServer(
             actor_config,
-            resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}"}},
+            resource={".*": {"users": ["test"], "tokens": [], "response": "OK {{uuid}}", "urldecoded_field": None}},
         )
 
         http.pool.createQueue("outbox")
@@ -466,7 +471,7 @@ def test_module_http_response_user_auth_order():
         actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
         http = HTTPServer(
             actor_config,
-            resource={".*": {"users": ["test", "test2"], "tokens": [], "response": "OK {{uuid}}"}},
+            resource={".*": {"users": ["test", "test2"], "tokens": [], "response": "OK {{uuid}}", "urldecoded_field": None}},
             htpasswd={"test": "$apr1$abc", "test2": "$apr1$rUKXjcuX$hqdIeoE2Q1Z/GMFhYsNO91"}
         )
 
@@ -494,7 +499,7 @@ def test_module_http_response_default_so_reuseport():
     http1 = HTTPServer(
         actor_config,
         so_reuseport=True,
-        resource={".*": {"users": [], "tokens": [], "response": "server1"}},
+        resource={".*": {"users": [], "tokens": [], "response": "server1", "urldecoded_field": None}},
     )
     http1.pool.createQueue("outbox")
     http1.pool.queue.outbox.disableFallThrough()
@@ -503,7 +508,7 @@ def test_module_http_response_default_so_reuseport():
     http2 = HTTPServer(
         actor_config,
         so_reuseport=True,
-        resource={".*": {"users": [], "tokens": [], "response": "server2"}},
+        resource={".*": {"users": [], "tokens": [], "response": "server2", "urldecoded_field": None}},
     )
     http2.pool.createQueue("outbox")
     http2.pool.queue.outbox.disableFallThrough()
@@ -517,5 +522,45 @@ def test_module_http_response_default_so_reuseport():
         r = requests.get('http://localhost:19283')
         assert r.status_code == 200
         result.append(r.text)
+    http2.stop()
+    http1.stop()
 
     assert ["server1", "server2"] == sorted(set(result))
+
+
+def test_module_http_default_submit_urlencoded():
+
+    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
+    http = HTTPServer(
+        actor_config,
+        resource={".*": {"users": [], "tokens": [], "response": "hello", "urldecoded_field": "payload"}}
+    )
+
+    http.pool.createQueue("outbox")
+    http.pool.queue.outbox.disableFallThrough()
+    http.start()
+
+    r = requests.post('http://localhost:19283', data={"payload": "hello there"})
+    r.close()
+
+    assert getter(http.pool.queue.outbox).get() == "hello there"
+    http.stop()
+
+
+def test_module_http_default_submit_urlencoded_max_bytes():
+
+    actor_config = ActorConfig('http', 100, 1, {}, "", disable_exception_handling=True)
+    http = HTTPServer(
+        actor_config,
+        resource={".*": {"users": [], "tokens": [], "response": "hello", "urldecoded_field": "payload"}},
+        max_bytes=5
+    )
+
+    http.pool.createQueue("outbox")
+    http.pool.queue.outbox.disableFallThrough()
+    http.start()
+
+    r = requests.post('http://localhost:19283', data={"payload": "hello there"})
+    r.close()
+
+    assert r.status_code == 406
