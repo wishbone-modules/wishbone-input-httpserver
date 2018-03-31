@@ -83,7 +83,7 @@ class FalconServer(object):
     def __init__(self, address, port, ssl_key, ssl_cert, ssl_cacerts, poolsize, so_reuseport,
                  callback_wishbone_event, wishbone_logger, wishbone_get_decoder, wishbone_queues,
                  callback_authorize_user, callback_authorize_token, callback_get_password_hash, callback_requires_authentication,
-                 urldecoded_fields):
+                 urldecoded_fields, max_bytes):
 
         self.address = address
         self.port = port
@@ -114,7 +114,8 @@ class FalconServer(object):
                 ),
                 DataExtractor(
                     wishbone_get_decoder,
-                    urldecoded_fields
+                    urldecoded_fields,
+                    max_bytes
                 ),
                 GenerateMetaData(
                 )

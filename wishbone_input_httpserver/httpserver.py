@@ -144,6 +144,12 @@ class HTTPServer(InputModule):
         - ssl_key(str)(None)
            |  When SSL is required, the location of the ssl_key to use.
 
+        - max_bytes(int)(16777216)
+            |  The maximum amount of bytes the client can send to the endpoint
+            |  when the expected content is application/x-www-form-urlencoded.
+            |  Keep in mind that the configured decoder also has a max number
+            |  of bytes defined.
+
     Queues::
 
         - outbox
@@ -195,7 +201,7 @@ class HTTPServer(InputModule):
                  address="0.0.0.0", port=19283, poolsize=1000, so_reuseport=False,
                  ssl_key=None, ssl_cert=None, ssl_cacerts=None,
                  resource={".*": {"users": [], "tokens": [], "response": "200 OK. {{uuid}}", "urldecoded_field": None}},
-                 htpasswd={}):
+                 htpasswd={}, max_bytes=16777216):
         InputModule.__init__(self, actor_config)
 
         self.pool.createSystemQueue("_htpasswd")
@@ -234,7 +240,8 @@ class HTTPServer(InputModule):
             callback_get_password_hash=self.getPasswordHash,
             callback_requires_authentication=self.requiresAuthentication,
             callback_wishbone_event=self.processEvent,
-            urldecoded_fields=self.__constructURLDecodedFieds(self.kwargs.resource)
+            urldecoded_fields=self.__constructURLDecodedFieds(self.kwargs.resource),
+            max_bytes=self.kwargs.max_bytes
         )
 
         self.server.start()
