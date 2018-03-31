@@ -9,7 +9,7 @@
     wishbone_contrib.module.input.httpserver
     ========================================
 
-    Version: 3.0.6
+    Version: 3.0.7
 
     Receive events over HTTP.
     -------------------------
@@ -106,7 +106,7 @@
             - port(int)(19283)
                |  The port to bind to.
 
-            - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}"}})
+            - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}", "urldecoded_field": null}})
                 |  Contains all endpoint authorization related config.
                 |  The moment at least 1 user or token is defined the
                 |  queue/endpoint needs authentication.
@@ -125,6 +125,11 @@
             - ssl_key(str)(None)
                |  When SSL is required, the location of the ssl_key to use.
 
+            - max_bytes(int)(16777216)
+                |  The maximum amount of bytes the client can send to the endpoint
+                |  when the expected content is application/x-www-form-urlencoded.
+                |  Keep in mind that the configured decoder also has a max number
+                |  of bytes defined.
 
         Queues::
 
