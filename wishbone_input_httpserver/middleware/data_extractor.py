@@ -29,6 +29,10 @@ import urllib.parse
 from wishbone.error import ProtocolError, InvalidData
 
 
+class MaxBytesExceeded(Exception):
+    pass
+
+
 class DataExtractor(object):
     '''
     A Falcon middleware which extracts and decodes the data out of the
@@ -66,6 +70,11 @@ class DataExtractor(object):
                 data_to_encode = req.stream
             else:
                 data_to_encode = payload
+
+        except MaxBytesExceeded as err:
+            resp.status = falcon.HTTP_406
+            resp.body = "406 Not Acceptable. There was an error processing your request. Reason: ProtocolDecodeError %s" % str(err)
+            return
         except Exception as err:
             resp.status = falcon.HTTP_400
             resp.body = "400 Bad Request. Unsupported event format. Reason: %s" % (err)
@@ -92,7 +101,7 @@ class DataExtractor(object):
         for item in stream.readlines():
             total_bytes += len(item)
             if total_bytes > self.max_bytes:
-                raise Exception("Incoming data exceeds max_bytes.")
+                raise MaxBytesExceeded("Incoming data exceeds maximum allowed bytes (max_bytes) of %s bytes ." % (self.max_bytes))
             payload.append(item.decode("utf-8"))
 
         return "\n".join(payload)
