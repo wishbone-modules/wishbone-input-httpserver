@@ -1,24 +1,28 @@
 language: python
 python:
-  - "3.6"
+- '3.6'
 install:
-  - python setup.py install
-  - pip install pytest
-
+- python setup.py install
+- pip install pytest
 script:
-  - pytest -s -v tests/default.py
-
+- pytest -s -v tests/default.py
 after_success:
-  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-  - export REPO=smetj/wishbone-input-httpserver
-  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-  - docker build -f Dockerfile -t $REPO:$TRAVIS_COMMIT --build-arg branch=$TRAVIS_BRANCH .
-  - docker tag $REPO:$TRAVIS_COMMIT $REPO:$TAG
-  - docker tag $REPO:$TRAVIS_COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-  - docker push $REPO:$TAG
-  - docker push $REPO:$TRAVIS_COMMIT
-
+- docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+- export REPO=smetj/wishbone-input-httpserver
+- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
+  ; fi`
+- docker build -f Dockerfile -t $REPO:$TRAVIS_COMMIT --build-arg branch=$TRAVIS_BRANCH
+  .
+- docker tag $REPO:$TRAVIS_COMMIT $REPO:$TAG
+- docker tag $REPO:$TRAVIS_COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+- docker push $REPO:$TAG
+- docker push $REPO:$TRAVIS_COMMIT
 notifications:
   webhooks:
     urls:
-      - https://$WEBHOOK_USER:$WEBHOOK_PASSWORD@events.smetj.net/travis
+    - secure: hiMLAH/g53hO369V0170hpOATuSADWMJ3/EnoDHoslTf1pDLnz4ga0lgxJO6pCWizDXGsb1mtTtxgSEFbxFzi5FvMYrk8YQHUD0DrJHEQRqmMWQ+IaO0xJRNLBGIU7UNkzvpjOjZsd9EmPY1SvNwWmCRbaHpxSu6sw1nESmH3WsSN7vTOZlIKVvS13cfOxURbdS4O9B2cMwNPM8j5YqHDYtvE8f2gc0AE6h/i+Z5v+k1FS5BO2Ts5GCHTHVOBhDB+1uhLsss/vvPB+3kMvJzC345/RiIHDvcT4vMKGfFkqazrWYYYrpYLhy3FHrs5R50sMv94KvFF5ASFjGN/tY/L3xCW1G+1wXsooixzJLUtVzF+jwsGnUufSA90RxVLDSR7Nf7sGAML07MYE07Wl492NrOtFcZKGX9AuRFZ829WFQxdE3cWKord+sFmuFGaMkKC+LPgGvCpO/1zeLksAywn32+5VzW/4vxFM6/+iFScT+bi2BDy8lDhkSaY/hCtj7i2huJON1hv7vwAeMG0+AivM+vY0FuI9OtYKHyZWDMLCi+iFQJSYvSN01fbEBJSa2hlAFH6YqJamQyoUehhJQ3bBQdi80ISISL8hXExXfBRskrholKnCjD9u7Zmsm2iolYRWvAMLodj6RSClfAQnR9itIO2FX4Sb8Lv8Z3/5EGmTg=
+    on_success: always
+    on_failure: always
+    on_start: change
+    on_cancel: always
+    on_error: always
