@@ -125,7 +125,7 @@ class HTTPServer(InputModule):
         - port(int)(19283)
            |  The port to bind to.
 
-        - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}"}})
+        - resource(dict)({".*": {"users:": [], "tokens": [], "response": "200 OK. {{uuid}}", "urldecoded_field": null}})
             |  Contains all endpoint authorization related config.
             |  The moment at least 1 user or token is defined the
             |  queue/endpoint needs authentication.
@@ -143,7 +143,6 @@ class HTTPServer(InputModule):
 
         - ssl_key(str)(None)
            |  When SSL is required, the location of the ssl_key to use.
-
 
     Queues::
 
@@ -176,13 +175,17 @@ class HTTPServer(InputModule):
                         },
                         "response": {
                             "type": "string"
+                        },
+                        "urldecoded_field": {
+                            "type": ["null", "string"]
                         }
                     },
                     "additionalProperties": False,
                     "required": [
                         "users",
                         "tokens",
-                        "response"
+                        "response",
+                        "urldecoded_field"
                     ]
                 }
         }
@@ -191,7 +194,8 @@ class HTTPServer(InputModule):
     def __init__(self, actor_config, native_events=False, destination="data",
                  address="0.0.0.0", port=19283, poolsize=1000, so_reuseport=False,
                  ssl_key=None, ssl_cert=None, ssl_cacerts=None,
-                 resource={".*": {"users": [], "tokens": [], "response": "200 OK. {{uuid}}"}}, htpasswd={}):
+                 resource={".*": {"users": [], "tokens": [], "response": "200 OK. {{uuid}}", "urldecoded_field": None}},
+                 htpasswd={}):
         InputModule.__init__(self, actor_config)
 
         self.pool.createSystemQueue("_htpasswd")
@@ -230,6 +234,7 @@ class HTTPServer(InputModule):
             callback_get_password_hash=self.getPasswordHash,
             callback_requires_authentication=self.requiresAuthentication,
             callback_wishbone_event=self.processEvent,
+            urldecoded_fields=self.__constructURLDecodedFieds(self.kwargs.resource)
         )
 
         self.server.start()
@@ -397,3 +402,11 @@ class HTTPServer(InputModule):
                     "data.path"
                 )
             )
+
+    def __constructURLDecodedFieds(self, resource_data):
+
+        result = {}
+        for endpoint, resource in resource_data.items():
+            if resource["urldecoded_field"] is not None:
+                result[endpoint] = resource["urldecoded_field"]
+        return result
