@@ -59,12 +59,16 @@ class DataExtractor(object):
 
         try:
             for queue, field in self.urldecoded_fields.items():
-                if re.match(queue, field):
+                if re.match(queue, req.queue):
                     if req.method in ["POST", "PUT"]:
                         if req.content_type.lower() == "application/x-www-form-urlencoded":
                             payload = self.__getCompleteStream(req.stream)
-                            payload = urllib.parse.unquote(payload)
-                            payload = parse_qs(payload)[field][-1]
+                            payload = urllib.parse.unquote_plus(payload)
+                            # Dafuq? Otherwise ; is seen as a delimiter?
+                            # https://stackoverflow.com/questions/20910273/is-there-an-alternative-to-parse-qs-that-handles-semi-colons
+                            payload = parse_qs(payload.replace(';', '@semicolon@'))[field][-1]  # the last parameter wins
+                            payload = payload.replace('@semicolon@', ';')
+                    break
 
             if payload is None:
                 data_to_encode = req.stream
@@ -104,4 +108,4 @@ class DataExtractor(object):
                 raise MaxBytesExceeded("Incoming data exceeds maximum allowed bytes (max_bytes) of %s bytes ." % (self.max_bytes))
             payload.append(item.decode("utf-8"))
 
-        return "\n".join(payload)
+        return "".join(payload)

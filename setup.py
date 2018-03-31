@@ -27,7 +27,7 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 PROJECT = 'wishbone_input_httpserver'
-VERSION = '3.0.7'
+VERSION = '3.0.8'
 
 install_requires = [
     'wishbone>=3.1.2',
