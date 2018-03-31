@@ -59,7 +59,7 @@ class DataExtractor(object):
 
         try:
             for queue, field in self.urldecoded_fields.items():
-                if re.match(queue, field):
+                if re.match(queue, req.queue):
                     if req.method in ["POST", "PUT"]:
                         if req.content_type.lower() == "application/x-www-form-urlencoded":
                             payload = self.__getCompleteStream(req.stream)
