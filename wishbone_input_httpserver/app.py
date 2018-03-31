@@ -31,6 +31,7 @@ from wishbone_input_httpserver.middleware import BasicAuthentication
 from wishbone_input_httpserver.middleware import TokenAuthentication
 from wishbone_input_httpserver.middleware import Authorize
 from wishbone_input_httpserver.middleware import DeriveQueue
+from wishbone_input_httpserver.middleware import DataExtractor
 from wishbone.error import ProtocolError, InvalidData
 
 
@@ -47,9 +48,8 @@ class LogWrapper(object):
 
 class EventHandler(object):
 
-    def __init__(self, get_decoder, wishbone_event_callback):
+    def __init__(self, wishbone_event_callback):
 
-        self.getDecoder = get_decoder
         self.wishbone_event_callback = wishbone_event_callback
 
     def on_get(self, req, resp, queue="outbox"):
@@ -63,12 +63,11 @@ class EventHandler(object):
                 resp.body = "400 Bad Request. Unsupported event format. Reason: %s" % (err)
 
     def on_put(self, req, resp, queue="outbox"):
-        decoder = self.getDecoder()
+
         if resp.status == "200 OK":
             try:
-                for chunk in [req.stream, None]:
-                    for item in decoder(chunk):
-                        resp.body = self.wishbone_event_callback(item, req.meta, req.queue)
+                for payload in req.event_payloads:
+                    resp.body = self.wishbone_event_callback(payload, req.meta, req.queue)
             except ProtocolError as err:
                 resp.status = falcon.HTTP_406
                 resp.body = "406 Not Acceptable. There was an error processing your request. Reason: ProtocolDecodeError %s" % str(err)
@@ -83,7 +82,8 @@ class FalconServer(object):
 
     def __init__(self, address, port, ssl_key, ssl_cert, ssl_cacerts, poolsize, so_reuseport,
                  callback_wishbone_event, wishbone_logger, wishbone_get_decoder, wishbone_queues,
-                 callback_authorize_user, callback_authorize_token, callback_get_password_hash, callback_requires_authentication):
+                 callback_authorize_user, callback_authorize_token, callback_get_password_hash, callback_requires_authentication,
+                 urldecoded_fields):
 
         self.address = address
         self.port = port
@@ -112,13 +112,16 @@ class FalconServer(object):
                     callback_authorize_token,
                     callback_requires_authentication
                 ),
+                DataExtractor(
+                    wishbone_get_decoder,
+                    urldecoded_fields
+                ),
                 GenerateMetaData(
                 )
             ]
         )
 
         event_handler = EventHandler(
-            wishbone_get_decoder,
             callback_wishbone_event
         )
 
